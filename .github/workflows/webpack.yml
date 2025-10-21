@@ -1,39 +1,47 @@
 name: Manual Web Build & Release
 
 on:
-  workflow_dispatch:  # Allows manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '20'  # Adjust if needed
+          node-version: '20'
 
-      - name: Install Dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: Build Project
-        run: npm run build  # Make sure this outputs your build folder
+      - name: Build project
+        run: npm run build  # Adjust if your build command differs
 
-      - name: Verify Build Folder
-        run: ls -la dist  # Change 'dist' if your build folder is different
-
-      - name: Zip Build Folder
+      - name: Zip build folder
         run: zip -r web-build.zip dist  # Replace 'dist' if needed
 
-      - name: Create or Update Release
-        id: release
-        uses: ncipollo/release-action@v1
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
         with:
-          token: ${{ secrets.PAT_TOKEN }}
-          tag: manual-${{ github.run_number }}
-          name: Web Build #${{ github.run_number }}
-          files: web-build.zip
-          overwrite: true  # Overwrites previous release with same tag if exists
+          tag_name: manual-${{ github.run_number }}
+          release_name: Web Build #${{ github.run_number }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}  # Your PAT with repo scope
+
+      - name: Upload build zip
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./web-build.zip
+          asset_name: web-build.zip
+          asset_content_type: application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
