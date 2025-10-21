@@ -23,7 +23,7 @@ jobs:
         run: npm run build  # Adjust if your build command is different
 
       - name: Zip Build Folder
-        run: zip -r web-build.zip build  # Adjust 'build' if your folder is different
+        run: zip -r web-build.zip dist
 
       - name: Create Release
         id: create_release
