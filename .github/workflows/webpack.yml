@@ -1,0 +1,45 @@
+name: Build & Release Web
+
+on:
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'  # Adjust if your project needs another version
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Project
+        run: npm run build  # Adjust if your build command is different
+
+      - name: Zip Build Folder
+        run: zip -r web-build.zip build  # Adjust 'build' if your folder is different
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        with:
+          tag_name: "manual-${{ github.run_number }}"  # Unique tag for manual run
+          release_name: "Web Build #${{ github.run_number }}"
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Build Artifact
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./web-build.zip
+          asset_name: web-build.zip
+          asset_content_type: application/zip
